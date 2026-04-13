@@ -219,3 +219,41 @@ export type EmployerVerificationRow = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type MessageThreadRow = {
+  id: string;
+  applicationId: string;
+  createdAt: string;
+};
+
+export type MessageRow = {
+  id: string;
+  threadId: string;
+  senderSubjectId: string;
+  content: string;
+  readAt: string | null;
+  createdAt: string;
+};
+
+export type InterviewRow = {
+  id: string;
+  applicationId: string;
+  proposedBySubjectId: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  location: string | null;
+  meetingUrl: string | null;
+  status: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type InterviewFeedbackRow = {
+  id: string;
+  interviewId: string;
+  reviewerSubjectId: string;
+  rating: number | null;
+  notes: string | null;
+  createdAt: string;
+};

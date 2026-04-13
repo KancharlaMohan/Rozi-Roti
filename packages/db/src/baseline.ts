@@ -329,6 +329,55 @@ CREATE TABLE IF NOT EXISTS jobs_employer_verifications (
 
 ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS verification_status text NOT NULL DEFAULT 'unverified';
 ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS verified_at timestamptz;
+
+-- Wave 4: Message threads
+CREATE TABLE IF NOT EXISTS jobs_message_threads (
+  id uuid PRIMARY KEY,
+  application_id uuid NOT NULL REFERENCES jobs_applications(id),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_message_threads_app_idx
+  ON jobs_message_threads (application_id);
+
+-- Wave 4: Messages
+CREATE TABLE IF NOT EXISTS jobs_messages (
+  id uuid PRIMARY KEY,
+  thread_id uuid NOT NULL REFERENCES jobs_message_threads(id),
+  sender_subject_id uuid NOT NULL,
+  content text NOT NULL,
+  read_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_messages_thread_idx
+  ON jobs_messages (thread_id, created_at);
+
+-- Wave 4: Interviews
+CREATE TABLE IF NOT EXISTS jobs_interviews (
+  id uuid PRIMARY KEY,
+  application_id uuid NOT NULL REFERENCES jobs_applications(id),
+  proposed_by_subject_id uuid NOT NULL,
+  scheduled_at timestamptz NOT NULL,
+  duration_minutes integer NOT NULL DEFAULT 60,
+  location text,
+  meeting_url text,
+  status text NOT NULL DEFAULT 'proposed'
+    CHECK (status IN ('proposed','confirmed','rescheduled','completed','cancelled')),
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_interviews_app_idx
+  ON jobs_interviews (application_id);
+
+-- Wave 4: Interview feedback
+CREATE TABLE IF NOT EXISTS jobs_interview_feedback (
+  id uuid PRIMARY KEY,
+  interview_id uuid NOT NULL REFERENCES jobs_interviews(id),
+  reviewer_subject_id uuid NOT NULL,
+  rating integer CHECK (rating BETWEEN 1 AND 5),
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {

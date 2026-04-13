@@ -17,6 +17,8 @@ import type { ScreeningRepository } from "../ports/screening.repository.js";
 import type { CandidateSearchRepository } from "../ports/candidate-search.repository.js";
 import type { PrivacyRepository } from "../ports/privacy.repository.js";
 import type { ModerationRepository } from "../ports/moderation.repository.js";
+import type { MessagingRepository } from "../ports/messaging.repository.js";
+import type { InterviewsRepository } from "../ports/interviews.repository.js";
 
 export type JobsServiceDeps = {
   employers: EmployersRepository;
@@ -36,6 +38,8 @@ export type JobsServiceDeps = {
   candidateSearch: CandidateSearchRepository;
   privacy: PrivacyRepository;
   moderation: ModerationRepository;
+  messaging: MessagingRepository;
+  interviews: InterviewsRepository;
 };
 
 export class JobsService {

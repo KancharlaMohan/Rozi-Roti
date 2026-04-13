@@ -18,6 +18,8 @@ import { createInMemoryScreeningStore } from "../src/adapters/in-memory/screenin
 import { createInMemoryCandidateSearchStore } from "../src/adapters/in-memory/candidate-search.store.js";
 import { createInMemoryPrivacyStore } from "../src/adapters/in-memory/privacy.store.js";
 import { createInMemoryModerationStore } from "../src/adapters/in-memory/moderation.store.js";
+import { createInMemoryMessagingStore } from "../src/adapters/in-memory/messaging.store.js";
+import { createInMemoryInterviewsStore } from "../src/adapters/in-memory/interviews.store.js";
 
 const TEST_ENV: JobsEnv = {
   NODE_ENV: "test",
@@ -96,6 +98,8 @@ export async function buildTestApp() {
     ),
     privacy: createInMemoryPrivacyStore(),
     moderation: createInMemoryModerationStore(),
+    messaging: createInMemoryMessagingStore(),
+    interviews: createInMemoryInterviewsStore(),
   };
   return buildJobsApp(deps);
 }

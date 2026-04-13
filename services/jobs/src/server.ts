@@ -18,6 +18,8 @@ import { createInMemoryScreeningStore } from "./adapters/in-memory/screening.sto
 import { createInMemoryCandidateSearchStore } from "./adapters/in-memory/candidate-search.store.js";
 import { createInMemoryPrivacyStore } from "./adapters/in-memory/privacy.store.js";
 import { createInMemoryModerationStore } from "./adapters/in-memory/moderation.store.js";
+import { createInMemoryMessagingStore } from "./adapters/in-memory/messaging.store.js";
+import { createInMemoryInterviewsStore } from "./adapters/in-memory/interviews.store.js";
 
 const env = loadJobsEnv();
 
@@ -82,6 +84,8 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       ),
       privacy: createInMemoryPrivacyStore(),
       moderation: createInMemoryModerationStore(),
+      messaging: createInMemoryMessagingStore(),
+      interviews: createInMemoryInterviewsStore(),
     };
   }
 
@@ -113,6 +117,8 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
     ),
     privacy: createInMemoryPrivacyStore(),
     moderation: createInMemoryModerationStore(),
+    messaging: createInMemoryMessagingStore(),
+    interviews: createInMemoryInterviewsStore(),
   };
 }
 
