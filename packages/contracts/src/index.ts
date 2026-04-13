@@ -22,3 +22,4 @@ export * from "./interviews.js";
 export * from "./analytics.js";
 export * from "./admin.js";
 export * from "./reviews.js";
+export * from "./ads.js";

@@ -21,6 +21,7 @@ import { registerInterviewRoutes } from "./routes/interviews.js";
 import { registerAnalyticsRoutes } from "./routes/analytics.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerReviewRoutes } from "./routes/reviews.js";
+import { registerAdRoutes } from "./routes/ads.js";
 
 export type BuildJobsAppInput = {
   env: JobsEnv;
@@ -57,6 +58,7 @@ export async function buildJobsApp(
   registerAnalyticsRoutes(app, svc, input, requirePrincipal);
   registerAdminRoutes(app, input, requirePrincipal);
   registerReviewRoutes(app, input, requirePrincipal);
+  registerAdRoutes(app, svc, input, requirePrincipal);
 
   return app;
 }

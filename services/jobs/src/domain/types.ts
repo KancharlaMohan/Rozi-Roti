@@ -290,3 +290,37 @@ export type CompanyReviewRow = {
   status: string;
   createdAt: string;
 };
+
+export type AdPlacementRow = {
+  id: string;
+  placementType: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+};
+
+export type AdCampaignRow = {
+  id: string;
+  advertiserSubjectId: string;
+  name: string;
+  status: string;
+  budget: number | null;
+  currency: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdCreativeRow = {
+  id: string;
+  campaignId: string;
+  placementId: string;
+  title: string;
+  body: string | null;
+  mediaAssetId: string | null;
+  targetUrl: string | null;
+  impressionCount: number;
+  clickCount: number;
+  createdAt: string;
+};

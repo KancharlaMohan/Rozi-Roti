@@ -424,6 +424,64 @@ CREATE UNIQUE INDEX IF NOT EXISTS jobs_company_reviews_uniq
   ON jobs_company_reviews (employer_id, reviewer_subject_id);
 CREATE INDEX IF NOT EXISTS jobs_company_reviews_employer_idx
   ON jobs_company_reviews (employer_id, created_at DESC);
+
+-- Wave 6: Ad placements
+CREATE TABLE IF NOT EXISTS jobs_ad_placements (
+  id uuid PRIMARY KEY,
+  placement_type text NOT NULL,
+  name text NOT NULL,
+  description text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 6: Ad campaigns
+CREATE TABLE IF NOT EXISTS jobs_ad_campaigns (
+  id uuid PRIMARY KEY,
+  advertiser_subject_id uuid NOT NULL,
+  name text NOT NULL,
+  status text NOT NULL DEFAULT 'draft'
+    CHECK (status IN ('draft','active','paused','completed')),
+  budget numeric,
+  currency text,
+  start_date timestamptz,
+  end_date timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_ad_campaigns_advertiser_idx
+  ON jobs_ad_campaigns (advertiser_subject_id);
+
+-- Wave 6: Ad creatives
+CREATE TABLE IF NOT EXISTS jobs_ad_creatives (
+  id uuid PRIMARY KEY,
+  campaign_id uuid NOT NULL REFERENCES jobs_ad_campaigns(id) ON DELETE CASCADE,
+  placement_id uuid NOT NULL REFERENCES jobs_ad_placements(id),
+  title text NOT NULL,
+  body text,
+  media_asset_id uuid,
+  target_url text,
+  impression_count integer NOT NULL DEFAULT 0,
+  click_count integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_ad_creatives_campaign_idx
+  ON jobs_ad_creatives (campaign_id);
+
+-- Wave 6: Featured employers
+CREATE TABLE IF NOT EXISTS jobs_featured_employers (
+  id uuid PRIMARY KEY,
+  employer_id uuid NOT NULL REFERENCES jobs_employers(id),
+  campaign_id uuid REFERENCES jobs_ad_campaigns(id),
+  priority integer NOT NULL DEFAULT 0,
+  starts_at timestamptz NOT NULL,
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_featured_employers_active_idx
+  ON jobs_featured_employers (expires_at, priority DESC);
+
+-- Wave 6: Sponsored jobs flag
+ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS is_sponsored boolean NOT NULL DEFAULT false;
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {
