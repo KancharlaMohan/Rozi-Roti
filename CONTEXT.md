@@ -87,4 +87,5 @@ Roti Rozi/                           # Root monorepo
 2. [ARCHITECTURE_RULES.md](./ARCHITECTURE_RULES.md) — this Planet's rules
 3. [IDENTITY_RULES.md](./IDENTITY_RULES.md) — identity handling
 4. [AI_CONSTITUTION.md](./AI_CONSTITUTION.md) — AI agent guardrails
-5. [CosmoX Planet Starter Kit](../cosmox-shared-services/docs/architecture/planet-starter-kit.md) — structural patterns
+5. [PRODUCTION_GAPS.md](./PRODUCTION_GAPS.md) — what's NOT production-ready yet (auth, SMS, consent, etc.)
+6. [CosmoX Planet Starter Kit](../cosmox-shared-services/docs/architecture/planet-starter-kit.md) — structural patterns
