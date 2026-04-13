@@ -18,6 +18,9 @@ import { registerPrivacyRoutes } from "./routes/privacy.js";
 import { registerModerationRoutes } from "./routes/moderation.js";
 import { registerMessagingRoutes } from "./routes/messaging.js";
 import { registerInterviewRoutes } from "./routes/interviews.js";
+import { registerAnalyticsRoutes } from "./routes/analytics.js";
+import { registerAdminRoutes } from "./routes/admin.js";
+import { registerReviewRoutes } from "./routes/reviews.js";
 
 export type BuildJobsAppInput = {
   env: JobsEnv;
@@ -51,6 +54,9 @@ export async function buildJobsApp(
   registerModerationRoutes(app, svc, input, requirePrincipal);
   registerMessagingRoutes(app, input, requirePrincipal);
   registerInterviewRoutes(app, input, requirePrincipal);
+  registerAnalyticsRoutes(app, svc, input, requirePrincipal);
+  registerAdminRoutes(app, input, requirePrincipal);
+  registerReviewRoutes(app, input, requirePrincipal);
 
   return app;
 }

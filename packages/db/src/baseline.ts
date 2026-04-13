@@ -378,6 +378,52 @@ CREATE TABLE IF NOT EXISTS jobs_interview_feedback (
   notes text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Wave 5: Analytics events
+CREATE TABLE IF NOT EXISTS jobs_analytics_events (
+  id uuid PRIMARY KEY,
+  event_type text NOT NULL,
+  entity_type text NOT NULL,
+  entity_id uuid NOT NULL,
+  subject_id uuid,
+  metadata jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_analytics_events_entity_idx
+  ON jobs_analytics_events (entity_type, entity_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS jobs_analytics_events_type_idx
+  ON jobs_analytics_events (event_type, created_at DESC);
+
+-- Wave 5: Admin actions
+CREATE TABLE IF NOT EXISTS jobs_admin_actions (
+  id uuid PRIMARY KEY,
+  admin_subject_id uuid NOT NULL,
+  action_type text NOT NULL,
+  entity_type text NOT NULL,
+  entity_id uuid NOT NULL,
+  reason text,
+  metadata jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_admin_actions_entity_idx
+  ON jobs_admin_actions (entity_type, entity_id);
+
+-- Wave 5: Company reviews
+CREATE TABLE IF NOT EXISTS jobs_company_reviews (
+  id uuid PRIMARY KEY,
+  employer_id uuid NOT NULL REFERENCES jobs_employers(id),
+  reviewer_subject_id uuid NOT NULL,
+  overall_rating integer NOT NULL CHECK (overall_rating BETWEEN 1 AND 5),
+  title text,
+  pros text,
+  cons text,
+  status text NOT NULL DEFAULT 'pending_review',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_company_reviews_uniq
+  ON jobs_company_reviews (employer_id, reviewer_subject_id);
+CREATE INDEX IF NOT EXISTS jobs_company_reviews_employer_idx
+  ON jobs_company_reviews (employer_id, created_at DESC);
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {

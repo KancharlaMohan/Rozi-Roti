@@ -20,6 +20,9 @@ import { createInMemoryPrivacyStore } from "./adapters/in-memory/privacy.store.j
 import { createInMemoryModerationStore } from "./adapters/in-memory/moderation.store.js";
 import { createInMemoryMessagingStore } from "./adapters/in-memory/messaging.store.js";
 import { createInMemoryInterviewsStore } from "./adapters/in-memory/interviews.store.js";
+import { createInMemoryAnalyticsStore } from "./adapters/in-memory/analytics.store.js";
+import { createInMemoryAdminStore } from "./adapters/in-memory/admin.store.js";
+import { createInMemoryReviewsStore } from "./adapters/in-memory/reviews.store.js";
 
 const env = loadJobsEnv();
 
@@ -86,6 +89,9 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       moderation: createInMemoryModerationStore(),
       messaging: createInMemoryMessagingStore(),
       interviews: createInMemoryInterviewsStore(),
+      analytics: createInMemoryAnalyticsStore(),
+      admin: createInMemoryAdminStore({ findBySubjectId: async () => null, findById: async () => null, create: async (i: any) => i, update: async () => null } as any, jobs),
+      reviews: createInMemoryReviewsStore(),
     };
   }
 
@@ -119,6 +125,9 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
     moderation: createInMemoryModerationStore(),
     messaging: createInMemoryMessagingStore(),
     interviews: createInMemoryInterviewsStore(),
+    analytics: createInMemoryAnalyticsStore(),
+    admin: createInMemoryAdminStore(createInMemoryEmployersStore(), jobs),
+    reviews: createInMemoryReviewsStore(),
   };
 }
 

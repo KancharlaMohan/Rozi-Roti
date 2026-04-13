@@ -257,3 +257,36 @@ export type InterviewFeedbackRow = {
   notes: string | null;
   createdAt: string;
 };
+
+export type AnalyticsEventRow = {
+  id: string;
+  eventType: string;
+  entityType: string;
+  entityId: string;
+  subjectId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type AdminActionRow = {
+  id: string;
+  adminSubjectId: string;
+  actionType: string;
+  entityType: string;
+  entityId: string;
+  reason: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type CompanyReviewRow = {
+  id: string;
+  employerId: string;
+  reviewerSubjectId: string;
+  overallRating: number;
+  title: string | null;
+  pros: string | null;
+  cons: string | null;
+  status: string;
+  createdAt: string;
+};
