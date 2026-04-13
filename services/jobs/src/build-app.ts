@@ -1,6 +1,9 @@
 import { createRequirePrincipalPreHandler } from "@cosmox/http-auth";
 import type { AuthenticateRequestPort } from "@cosmox/providers";
 import { randomUUID } from "crypto";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { JobsEnv } from "./env.js";
 import { JobsService, type JobsServiceDeps } from "./domain/jobs-service.js";
@@ -43,6 +46,18 @@ export async function buildJobsApp(
 
   const requirePrincipal = createRequirePrincipalPreHandler(input.authenticate);
   const svc = new JobsService(input);
+
+  // Serve frontend (public/index.html) at root
+  app.get("/", async (_req, reply) => {
+    try {
+      const dir = dirname(fileURLToPath(import.meta.url));
+      const html = readFileSync(join(dir, "..", "public", "index.html"), "utf-8");
+      reply.header("Content-Type", "text/html");
+      return reply.send(html);
+    } catch {
+      return reply.code(404).send("Frontend not found");
+    }
+  });
 
   registerHealthRoutes(app, input.env);
   registerJobRoutes(app, input);
