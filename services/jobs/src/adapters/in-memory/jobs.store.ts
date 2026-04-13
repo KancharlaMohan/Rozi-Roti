@@ -41,7 +41,10 @@ export function createInMemoryJobsStore(): InMemoryJobsStore {
     },
 
     async listPublished(filter: ListJobsFilter) {
-      let results = [...rows.values()].filter((r) => r.status === "published");
+      const now = new Date().toISOString();
+      let results = [...rows.values()].filter(
+        (r) => r.status === "published" && (!r.expiresAt || r.expiresAt > now),
+      );
 
       if (filter.jobType) {
         results = results.filter((r) => r.jobType === filter.jobType);

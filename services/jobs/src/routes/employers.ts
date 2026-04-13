@@ -145,7 +145,9 @@ export function registerEmployerRoutes(
           requiredSkills: parsed.requiredSkills,
           industry: parsed.industry,
           experienceLevel: parsed.experienceLevel,
+          expiresAt: parsed.expiresAt,
           mediaAssetIds: parsed.mediaAssetIds,
+          screeningQuestions: parsed.screeningQuestions,
         });
 
         return reply.code(201).send(jobRowToPublic(job));
@@ -189,6 +191,29 @@ export function registerEmployerRoutes(
         const code = (e as { code?: string }).code;
         if (code === "not_found") return errorReply(reply, 404, "not_found", (e as Error).message, req.id);
         if (code === "forbidden") return errorReply(reply, 403, "forbidden", (e as Error).message, req.id);
+        throw e;
+      }
+    },
+  );
+
+  app.post(
+    "/v1/employers/jobs/:id/repost",
+    { preHandler: requirePrincipal },
+    async (req, reply) => {
+      try {
+        const { id } = req.params as { id: string };
+        const principal = req.principal!;
+        const employer = await svc.getEmployerBySubject(principal.subjectId);
+        if (!employer) {
+          return errorReply(reply, 404, "employer_not_found", "Register as an employer first.", req.id);
+        }
+        const job = await svc.repostJob(id, employer.id);
+        return reply.code(201).send(jobRowToPublic(job));
+      } catch (e) {
+        const code = (e as { code?: string }).code;
+        if (code === "not_found") return errorReply(reply, 404, "not_found", (e as Error).message, req.id);
+        if (code === "forbidden") return errorReply(reply, 403, "forbidden", (e as Error).message, req.id);
+        if (code === "invalid_status") return errorReply(reply, 400, "invalid_status", (e as Error).message, req.id);
         throw e;
       }
     },

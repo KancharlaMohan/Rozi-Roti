@@ -198,6 +198,61 @@ ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS founded_year integer;
 ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS required_skills text[] NOT NULL DEFAULT '{}';
 ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS industry text;
 ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS experience_level text;
+
+-- Wave 2: Job lifecycle
+ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS expires_at timestamptz;
+
+-- Wave 2: Job templates
+CREATE TABLE IF NOT EXISTS jobs_templates (
+  id uuid PRIMARY KEY,
+  employer_id uuid NOT NULL REFERENCES jobs_employers(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  title text NOT NULL,
+  description text,
+  job_type text,
+  work_mode text,
+  required_skills text[] NOT NULL DEFAULT '{}',
+  industry text,
+  experience_level text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_templates_employer_idx ON jobs_templates (employer_id);
+
+-- Wave 2: Recently viewed jobs
+CREATE TABLE IF NOT EXISTS jobs_recently_viewed (
+  id uuid PRIMARY KEY,
+  subject_id uuid NOT NULL,
+  job_id uuid NOT NULL REFERENCES jobs_postings(id) ON DELETE CASCADE,
+  viewed_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_recently_viewed_uniq
+  ON jobs_recently_viewed (subject_id, job_id);
+CREATE INDEX IF NOT EXISTS jobs_recently_viewed_subject_idx
+  ON jobs_recently_viewed (subject_id, viewed_at DESC);
+
+-- Wave 2: Screening questions
+CREATE TABLE IF NOT EXISTS jobs_screening_questions (
+  id uuid PRIMARY KEY,
+  job_id uuid NOT NULL REFERENCES jobs_postings(id) ON DELETE CASCADE,
+  question_text text NOT NULL,
+  required boolean NOT NULL DEFAULT false,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_screening_questions_job_idx
+  ON jobs_screening_questions (job_id, sort_order);
+
+-- Wave 2: Screening answers
+CREATE TABLE IF NOT EXISTS jobs_screening_answers (
+  id uuid PRIMARY KEY,
+  application_id uuid NOT NULL REFERENCES jobs_applications(id) ON DELETE CASCADE,
+  question_id uuid NOT NULL REFERENCES jobs_screening_questions(id),
+  answer_text text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_screening_answers_app_idx
+  ON jobs_screening_answers (application_id);
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {

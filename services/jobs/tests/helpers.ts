@@ -12,6 +12,10 @@ import { createInMemoryCandidateExperienceStore } from "../src/adapters/in-memor
 import { createInMemoryCandidateEducationStore } from "../src/adapters/in-memory/candidate-education.store.js";
 import { createInMemoryCandidatePreferencesStore } from "../src/adapters/in-memory/candidate-preferences.store.js";
 import { createInMemoryNotificationPreferencesStore } from "../src/adapters/in-memory/notification-preferences.store.js";
+import { createInMemoryJobTemplatesStore } from "../src/adapters/in-memory/job-templates.store.js";
+import { createInMemoryRecentlyViewedStore } from "../src/adapters/in-memory/recently-viewed.store.js";
+import { createInMemoryScreeningStore } from "../src/adapters/in-memory/screening.store.js";
+import { createInMemoryCandidateSearchStore } from "../src/adapters/in-memory/candidate-search.store.js";
 
 const TEST_ENV: JobsEnv = {
   NODE_ENV: "test",
@@ -71,6 +75,14 @@ export async function buildTestApp() {
     candidateEducation: createInMemoryCandidateEducationStore(),
     candidatePreferences: createInMemoryCandidatePreferencesStore(),
     notificationPreferences: createInMemoryNotificationPreferencesStore(),
+    jobTemplates: createInMemoryJobTemplatesStore(),
+    recentlyViewed: createInMemoryRecentlyViewedStore(() => jobs._rows),
+    screening: createInMemoryScreeningStore(),
+    candidateSearch: createInMemoryCandidateSearchStore(
+      () => [],
+      () => [],
+      () => null,
+    ),
   };
   return buildJobsApp(deps);
 }

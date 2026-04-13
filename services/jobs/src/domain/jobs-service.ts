@@ -11,6 +11,10 @@ import type { CandidateExperienceRepository } from "../ports/candidate-experienc
 import type { CandidateEducationRepository } from "../ports/candidate-education.repository.js";
 import type { CandidatePreferencesRepository } from "../ports/candidate-preferences.repository.js";
 import type { NotificationPreferencesRepository } from "../ports/notification-preferences.repository.js";
+import type { JobTemplatesRepository } from "../ports/job-templates.repository.js";
+import type { RecentlyViewedRepository } from "../ports/recently-viewed.repository.js";
+import type { ScreeningRepository } from "../ports/screening.repository.js";
+import type { CandidateSearchRepository } from "../ports/candidate-search.repository.js";
 
 export type JobsServiceDeps = {
   employers: EmployersRepository;
@@ -24,6 +28,10 @@ export type JobsServiceDeps = {
   candidateEducation: CandidateEducationRepository;
   candidatePreferences: CandidatePreferencesRepository;
   notificationPreferences: NotificationPreferencesRepository;
+  jobTemplates: JobTemplatesRepository;
+  recentlyViewed: RecentlyViewedRepository;
+  screening: ScreeningRepository;
+  candidateSearch: CandidateSearchRepository;
 };
 
 export class JobsService {
@@ -122,9 +130,11 @@ export class JobsService {
     requiredSkills?: string[];
     industry?: string;
     experienceLevel?: string;
+    expiresAt?: string;
     mediaAssetIds?: string[];
+    screeningQuestions?: Array<{ questionText: string; required?: boolean }>;
   }): Promise<JobRow> {
-    return this.deps.jobs.create({
+    const job = await this.deps.jobs.create({
       id: randomUUID(),
       employerId: input.employerId,
       title: input.title,
@@ -143,7 +153,56 @@ export class JobsService {
       requiredSkills: input.requiredSkills ?? [],
       industry: input.industry ?? null,
       experienceLevel: input.experienceLevel ?? null,
+      expiresAt: input.expiresAt ?? null,
       mediaAssetIds: input.mediaAssetIds ?? [],
+    });
+
+    if (input.screeningQuestions && input.screeningQuestions.length > 0) {
+      await this.deps.screening.createQuestions(
+        input.screeningQuestions.map((q, i) => ({
+          id: randomUUID(),
+          jobId: job.id,
+          questionText: q.questionText,
+          required: q.required ?? false,
+          sortOrder: i,
+        })),
+      );
+    }
+
+    return job;
+  }
+
+  async repostJob(jobId: string, employerId: string): Promise<JobRow> {
+    const job = await this.deps.jobs.findById(jobId);
+    if (!job) throw Object.assign(new Error("Job not found."), { code: "not_found" });
+    if (job.employerId !== employerId) {
+      throw Object.assign(new Error("Not authorized."), { code: "forbidden" });
+    }
+    if (job.status !== "closed" && job.status !== "archived") {
+      throw Object.assign(new Error("Only closed or archived jobs can be reposted."), { code: "invalid_status" });
+    }
+
+    return this.deps.jobs.create({
+      id: randomUUID(),
+      employerId: job.employerId,
+      title: job.title,
+      description: job.description,
+      jobType: job.jobType,
+      workMode: job.workMode,
+      locationCity: job.locationCity,
+      locationRegion: job.locationRegion,
+      locationCountry: job.locationCountry,
+      compMinAmount: job.compMinAmount,
+      compMaxAmount: job.compMaxAmount,
+      compCurrency: job.compCurrency,
+      compPeriod: job.compPeriod,
+      status: "draft",
+      tags: job.tags,
+      requiredSkills: job.requiredSkills,
+      industry: job.industry,
+      experienceLevel: job.experienceLevel,
+      expiresAt: null,
+      mediaAssetIds: job.mediaAssetIds,
     });
   }
 

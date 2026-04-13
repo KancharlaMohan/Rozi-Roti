@@ -44,6 +44,7 @@ export type JobRow = {
   requiredSkills: string[];
   industry: string | null;
   experienceLevel: string | null;
+  expiresAt: string | null;
   mediaAssetIds: string[];
   createdAt: string;
   updatedAt: string;
@@ -122,4 +123,43 @@ export type NotificationPreferenceRow = {
   channel: string;
   enabled: boolean;
   updatedAt: string;
+};
+
+export type JobTemplateRow = {
+  id: string;
+  employerId: string;
+  name: string;
+  title: string;
+  description: string | null;
+  jobType: string | null;
+  workMode: string | null;
+  requiredSkills: string[];
+  industry: string | null;
+  experienceLevel: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RecentlyViewedRow = {
+  id: string;
+  subjectId: string;
+  jobId: string;
+  viewedAt: string;
+};
+
+export type ScreeningQuestionRow = {
+  id: string;
+  jobId: string;
+  questionText: string;
+  required: boolean;
+  sortOrder: number;
+  createdAt: string;
+};
+
+export type ScreeningAnswerRow = {
+  id: string;
+  applicationId: string;
+  questionId: string;
+  answerText: string;
+  createdAt: string;
 };

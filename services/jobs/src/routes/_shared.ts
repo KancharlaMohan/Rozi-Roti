@@ -32,6 +32,7 @@ export function jobRowToPublic(row: JobRow) {
     requiredSkills: row.requiredSkills,
     industry: row.industry,
     experienceLevel: row.experienceLevel,
+    expiresAt: row.expiresAt,
     mediaAssetIds: row.mediaAssetIds,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

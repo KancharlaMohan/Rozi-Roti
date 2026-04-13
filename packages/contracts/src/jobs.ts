@@ -86,6 +86,7 @@ export const JobPublicSchema = z.object({
   requiredSkills: z.array(z.string()),
   industry: z.string().nullable(),
   experienceLevel: ExperienceLevelSchema.nullable(),
+  expiresAt: z.string().datetime().nullable(),
   mediaAssetIds: z.array(z.string().uuid()),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -103,6 +104,12 @@ export const ListJobsQuerySchema = z.object({
   workMode: WorkModeSchema.optional(),
   country: z.string().length(2).optional(),
   search: z.string().max(200).optional(),
+  salaryMin: z.coerce.number().min(0).optional(),
+  salaryMax: z.coerce.number().min(0).optional(),
+  salaryCurrency: z.string().length(3).optional(),
+  industry: z.string().max(120).optional(),
+  skills: z.string().max(500).optional(),
+  experienceLevel: ExperienceLevelSchema.optional(),
 });
 export type ListJobsQuery = z.infer<typeof ListJobsQuerySchema>;
 
@@ -129,7 +136,12 @@ export const CreateJobRequestSchema = z
     requiredSkills: z.array(z.string().max(100)).max(30).optional(),
     industry: z.string().max(120).optional(),
     experienceLevel: ExperienceLevelSchema.optional(),
+    expiresAt: z.string().datetime().optional(),
     mediaAssetIds: z.array(z.string().uuid()).max(16).optional(),
+    screeningQuestions: z.array(z.object({
+      questionText: z.string().min(1).max(500),
+      required: z.boolean().optional().default(false),
+    })).max(20).optional(),
   })
   .strict();
 export type CreateJobRequest = z.infer<typeof CreateJobRequestSchema>;

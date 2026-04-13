@@ -12,6 +12,10 @@ import { createInMemoryCandidateExperienceStore } from "./adapters/in-memory/can
 import { createInMemoryCandidateEducationStore } from "./adapters/in-memory/candidate-education.store.js";
 import { createInMemoryCandidatePreferencesStore } from "./adapters/in-memory/candidate-preferences.store.js";
 import { createInMemoryNotificationPreferencesStore } from "./adapters/in-memory/notification-preferences.store.js";
+import { createInMemoryJobTemplatesStore } from "./adapters/in-memory/job-templates.store.js";
+import { createInMemoryRecentlyViewedStore } from "./adapters/in-memory/recently-viewed.store.js";
+import { createInMemoryScreeningStore } from "./adapters/in-memory/screening.store.js";
+import { createInMemoryCandidateSearchStore } from "./adapters/in-memory/candidate-search.store.js";
 
 const env = loadJobsEnv();
 
@@ -59,31 +63,50 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       console.log("[jobs] Notifications: noop (NOTIFICATIONS_URL not set).");
     }
 
+    const candidateSkills = createInMemoryCandidateSkillsStore();
+    const candidatePreferences = createInMemoryCandidatePreferencesStore();
     return {
       employers, candidates, jobs, applications, savedJobs, notifications,
-      candidateSkills: createInMemoryCandidateSkillsStore(),
+      candidateSkills,
       candidateExperience: createInMemoryCandidateExperienceStore(),
       candidateEducation: createInMemoryCandidateEducationStore(),
-      candidatePreferences: createInMemoryCandidatePreferencesStore(),
+      candidatePreferences,
       notificationPreferences: createInMemoryNotificationPreferencesStore(),
+      jobTemplates: createInMemoryJobTemplatesStore(),
+      recentlyViewed: createInMemoryRecentlyViewedStore(() => new Map()), // PG mode — not used in-process
+      screening: createInMemoryScreeningStore(),
+      candidateSearch: createInMemoryCandidateSearchStore(
+        () => [], () => [], () => null, // PG mode handles joins in SQL
+      ),
     };
   }
 
   // Independent (standalone) mode: in-memory stores.
   console.log("[jobs] Running in standalone mode (in-memory stores).");
   const jobs = createInMemoryJobsStore();
+  const candidateSkillsStore = createInMemoryCandidateSkillsStore();
+  const candidatePrefsStore = createInMemoryCandidatePreferencesStore();
+  const candidatesStore = createInMemoryCandidatesStore();
   return {
     employers: createInMemoryEmployersStore(),
-    candidates: createInMemoryCandidatesStore(),
+    candidates: candidatesStore,
     jobs,
     applications: createInMemoryApplicationsStore(),
     savedJobs: createInMemorySavedJobsStore(() => jobs._rows),
     notifications: createNoopNotificationsAdapter(),
-    candidateSkills: createInMemoryCandidateSkillsStore(),
+    candidateSkills: candidateSkillsStore,
     candidateExperience: createInMemoryCandidateExperienceStore(),
     candidateEducation: createInMemoryCandidateEducationStore(),
-    candidatePreferences: createInMemoryCandidatePreferencesStore(),
+    candidatePreferences: candidatePrefsStore,
     notificationPreferences: createInMemoryNotificationPreferencesStore(),
+    jobTemplates: createInMemoryJobTemplatesStore(),
+    recentlyViewed: createInMemoryRecentlyViewedStore(() => jobs._rows),
+    screening: createInMemoryScreeningStore(),
+    candidateSearch: createInMemoryCandidateSearchStore(
+      () => [...(candidatesStore as any)._getAll?.() ?? []],
+      (profileId: string) => [],
+      (profileId: string) => null,
+    ),
   };
 }
 

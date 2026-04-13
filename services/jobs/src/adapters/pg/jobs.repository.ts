@@ -26,6 +26,7 @@ function mapRow(row: Record<string, unknown>): JobRow {
     requiredSkills: Array.isArray(row.required_skills) ? (row.required_skills as string[]) : [],
     industry: row.industry != null ? String(row.industry) : null,
     experienceLevel: row.experience_level != null ? String(row.experience_level) : null,
+    expiresAt: row.expires_at != null ? new Date(String(row.expires_at)).toISOString() : null,
     mediaAssetIds: [],
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
