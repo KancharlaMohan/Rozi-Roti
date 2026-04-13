@@ -6,6 +6,11 @@ import type { JobsRepository } from "../ports/jobs.repository.js";
 import type { ApplicationsRepository } from "../ports/applications.repository.js";
 import type { SavedJobsRepository } from "../ports/saved-jobs.repository.js";
 import type { NotificationsPort } from "../ports/notifications.port.js";
+import type { CandidateSkillsRepository } from "../ports/candidate-skills.repository.js";
+import type { CandidateExperienceRepository } from "../ports/candidate-experience.repository.js";
+import type { CandidateEducationRepository } from "../ports/candidate-education.repository.js";
+import type { CandidatePreferencesRepository } from "../ports/candidate-preferences.repository.js";
+import type { NotificationPreferencesRepository } from "../ports/notification-preferences.repository.js";
 
 export type JobsServiceDeps = {
   employers: EmployersRepository;
@@ -14,6 +19,11 @@ export type JobsServiceDeps = {
   applications: ApplicationsRepository;
   savedJobs: SavedJobsRepository;
   notifications: NotificationsPort;
+  candidateSkills: CandidateSkillsRepository;
+  candidateExperience: CandidateExperienceRepository;
+  candidateEducation: CandidateEducationRepository;
+  candidatePreferences: CandidatePreferencesRepository;
+  notificationPreferences: NotificationPreferencesRepository;
 };
 
 export class JobsService {
@@ -27,6 +37,9 @@ export class JobsService {
     description?: string;
     website?: string;
     logoAssetId?: string;
+    companySize?: string;
+    industry?: string;
+    foundedYear?: number;
   }): Promise<EmployerRow> {
     const existing = await this.deps.employers.findBySubjectId(input.subjectId);
     if (existing) {
@@ -41,11 +54,35 @@ export class JobsService {
       description: input.description ?? null,
       website: input.website ?? null,
       logoAssetId: input.logoAssetId ?? null,
+      companySize: input.companySize ?? null,
+      industry: input.industry ?? null,
+      foundedYear: input.foundedYear ?? null,
     });
   }
 
   async getEmployerBySubject(subjectId: string): Promise<EmployerRow | null> {
     return this.deps.employers.findBySubjectId(subjectId);
+  }
+
+  async updateEmployer(
+    subjectId: string,
+    input: Partial<{
+      companyName: string;
+      description: string;
+      website: string;
+      logoAssetId: string;
+      companySize: string;
+      industry: string;
+      foundedYear: number;
+    }>,
+  ): Promise<EmployerRow> {
+    const employer = await this.deps.employers.findBySubjectId(subjectId);
+    if (!employer) {
+      throw Object.assign(new Error("Employer not found."), { code: "not_found" });
+    }
+    const updated = await this.deps.employers.update(employer.id, input);
+    if (!updated) throw Object.assign(new Error("Employer not found."), { code: "not_found" });
+    return updated;
   }
 
   /* ----- Candidate profiles ----- */
@@ -82,6 +119,9 @@ export class JobsService {
     location?: { city?: string; region?: string; country?: string };
     compensation?: { minAmount?: number; maxAmount?: number; currency: string; period: string };
     tags?: string[];
+    requiredSkills?: string[];
+    industry?: string;
+    experienceLevel?: string;
     mediaAssetIds?: string[];
   }): Promise<JobRow> {
     return this.deps.jobs.create({
@@ -100,6 +140,9 @@ export class JobsService {
       compPeriod: input.compensation?.period ?? null,
       status: "draft",
       tags: input.tags ?? [],
+      requiredSkills: input.requiredSkills ?? [],
+      industry: input.industry ?? null,
+      experienceLevel: input.experienceLevel ?? null,
       mediaAssetIds: input.mediaAssetIds ?? [],
     });
   }
@@ -116,6 +159,9 @@ export class JobsService {
       compensation: { minAmount?: number; maxAmount?: number; currency: string; period: string };
       status: string;
       tags: string[];
+      requiredSkills: string[];
+      industry: string;
+      experienceLevel: string;
       mediaAssetIds: string[];
     }>,
   ): Promise<JobRow> {
@@ -132,6 +178,9 @@ export class JobsService {
     if (input.workMode !== undefined) patch.workMode = input.workMode;
     if (input.status !== undefined) patch.status = input.status;
     if (input.tags !== undefined) patch.tags = input.tags;
+    if (input.requiredSkills !== undefined) patch.requiredSkills = input.requiredSkills;
+    if (input.industry !== undefined) patch.industry = input.industry;
+    if (input.experienceLevel !== undefined) patch.experienceLevel = input.experienceLevel;
     if (input.mediaAssetIds !== undefined) patch.mediaAssetIds = input.mediaAssetIds;
     if (input.location !== undefined) {
       patch.locationCity = input.location.city ?? null;

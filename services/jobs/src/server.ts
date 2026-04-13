@@ -7,6 +7,11 @@ import { createInMemoryJobsStore } from "./adapters/in-memory/jobs.store.js";
 import { createInMemoryApplicationsStore } from "./adapters/in-memory/applications.store.js";
 import { createInMemorySavedJobsStore } from "./adapters/in-memory/saved-jobs.store.js";
 import { createNoopNotificationsAdapter } from "./adapters/noop-notifications.adapter.js";
+import { createInMemoryCandidateSkillsStore } from "./adapters/in-memory/candidate-skills.store.js";
+import { createInMemoryCandidateExperienceStore } from "./adapters/in-memory/candidate-experience.store.js";
+import { createInMemoryCandidateEducationStore } from "./adapters/in-memory/candidate-education.store.js";
+import { createInMemoryCandidatePreferencesStore } from "./adapters/in-memory/candidate-preferences.store.js";
+import { createInMemoryNotificationPreferencesStore } from "./adapters/in-memory/notification-preferences.store.js";
 
 const env = loadJobsEnv();
 
@@ -54,7 +59,14 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       console.log("[jobs] Notifications: noop (NOTIFICATIONS_URL not set).");
     }
 
-    return { employers, candidates, jobs, applications, savedJobs, notifications };
+    return {
+      employers, candidates, jobs, applications, savedJobs, notifications,
+      candidateSkills: createInMemoryCandidateSkillsStore(),
+      candidateExperience: createInMemoryCandidateExperienceStore(),
+      candidateEducation: createInMemoryCandidateEducationStore(),
+      candidatePreferences: createInMemoryCandidatePreferencesStore(),
+      notificationPreferences: createInMemoryNotificationPreferencesStore(),
+    };
   }
 
   // Independent (standalone) mode: in-memory stores.
@@ -67,6 +79,11 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
     applications: createInMemoryApplicationsStore(),
     savedJobs: createInMemorySavedJobsStore(() => jobs._rows),
     notifications: createNoopNotificationsAdapter(),
+    candidateSkills: createInMemoryCandidateSkillsStore(),
+    candidateExperience: createInMemoryCandidateExperienceStore(),
+    candidateEducation: createInMemoryCandidateEducationStore(),
+    candidatePreferences: createInMemoryCandidatePreferencesStore(),
+    notificationPreferences: createInMemoryNotificationPreferencesStore(),
   };
 }
 

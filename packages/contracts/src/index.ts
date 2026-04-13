@@ -7,3 +7,8 @@ export * from "./employers.js";
 export * from "./candidates.js";
 export * from "./applications.js";
 export * from "./saved-jobs.js";
+export * from "./skills.js";
+export * from "./experience.js";
+export * from "./education.js";
+export * from "./preferences.js";
+export * from "./notification-preferences.js";

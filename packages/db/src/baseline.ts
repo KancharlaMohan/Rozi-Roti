@@ -116,6 +116,88 @@ CREATE TABLE IF NOT EXISTS jobs_saved (
 
 CREATE INDEX IF NOT EXISTS jobs_saved_candidate_idx
   ON jobs_saved (candidate_profile_id, saved_at DESC);
+
+-- Wave 1: Candidate skills
+CREATE TABLE IF NOT EXISTS jobs_candidate_skills (
+  id uuid PRIMARY KEY,
+  candidate_profile_id uuid NOT NULL REFERENCES jobs_candidate_profiles(id) ON DELETE CASCADE,
+  subject_id uuid NOT NULL,
+  skill_name text NOT NULL,
+  proficiency text NOT NULL CHECK (proficiency IN ('beginner','intermediate','advanced','expert')),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_candidate_skills_uniq
+  ON jobs_candidate_skills (candidate_profile_id, lower(skill_name));
+CREATE INDEX IF NOT EXISTS jobs_candidate_skills_profile_idx
+  ON jobs_candidate_skills (candidate_profile_id);
+
+-- Wave 1: Candidate experience
+CREATE TABLE IF NOT EXISTS jobs_candidate_experience (
+  id uuid PRIMARY KEY,
+  candidate_profile_id uuid NOT NULL REFERENCES jobs_candidate_profiles(id) ON DELETE CASCADE,
+  subject_id uuid NOT NULL,
+  title text NOT NULL,
+  company text NOT NULL,
+  start_date text NOT NULL,
+  end_date text,
+  description text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_candidate_experience_profile_idx
+  ON jobs_candidate_experience (candidate_profile_id, start_date DESC);
+
+-- Wave 1: Candidate education
+CREATE TABLE IF NOT EXISTS jobs_candidate_education (
+  id uuid PRIMARY KEY,
+  candidate_profile_id uuid NOT NULL REFERENCES jobs_candidate_profiles(id) ON DELETE CASCADE,
+  subject_id uuid NOT NULL,
+  institution text NOT NULL,
+  degree text,
+  field_of_study text,
+  start_date text NOT NULL,
+  end_date text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_candidate_education_profile_idx
+  ON jobs_candidate_education (candidate_profile_id);
+
+-- Wave 1: Candidate preferences
+CREATE TABLE IF NOT EXISTS jobs_candidate_preferences (
+  candidate_profile_id uuid PRIMARY KEY REFERENCES jobs_candidate_profiles(id) ON DELETE CASCADE,
+  subject_id uuid NOT NULL,
+  desired_job_types text[] NOT NULL DEFAULT '{}',
+  desired_work_modes text[] NOT NULL DEFAULT '{}',
+  desired_locations jsonb NOT NULL DEFAULT '[]',
+  salary_min numeric,
+  salary_max numeric,
+  salary_currency text,
+  industries text[] NOT NULL DEFAULT '{}',
+  availability_status text NOT NULL DEFAULT 'not_looking'
+    CHECK (availability_status IN ('actively_looking','open','not_looking')),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 1: Notification preferences
+CREATE TABLE IF NOT EXISTS jobs_notification_preferences (
+  subject_id uuid NOT NULL,
+  category text NOT NULL,
+  channel text NOT NULL,
+  enabled boolean NOT NULL DEFAULT true,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (subject_id, category, channel)
+);
+
+-- Wave 1: Employer enrichment
+ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS company_size text;
+ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS industry text;
+ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS founded_year integer;
+
+-- Wave 1: Job posting enrichment
+ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS required_skills text[] NOT NULL DEFAULT '{}';
+ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS industry text;
+ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS experience_level text;
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {

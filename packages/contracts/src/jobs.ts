@@ -25,6 +25,15 @@ export type JobType = z.infer<typeof JobTypeSchema>;
 export const WorkModeSchema = z.enum(["onsite", "hybrid", "remote"]);
 export type WorkMode = z.infer<typeof WorkModeSchema>;
 
+export const ExperienceLevelSchema = z.enum([
+  "entry",
+  "mid",
+  "senior",
+  "lead",
+  "executive",
+]);
+export type ExperienceLevel = z.infer<typeof ExperienceLevelSchema>;
+
 export const CompensationPeriodSchema = z.enum([
   "hourly",
   "daily",
@@ -74,6 +83,9 @@ export const JobPublicSchema = z.object({
   compensation: CompensationSchema.nullable(),
   status: JobStatusSchema,
   tags: z.array(z.string()),
+  requiredSkills: z.array(z.string()),
+  industry: z.string().nullable(),
+  experienceLevel: ExperienceLevelSchema.nullable(),
   mediaAssetIds: z.array(z.string().uuid()),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -114,6 +126,9 @@ export const CreateJobRequestSchema = z
     location: JobLocationSchema.optional(),
     compensation: CompensationSchema.optional(),
     tags: z.array(z.string().max(60)).max(20).optional(),
+    requiredSkills: z.array(z.string().max(100)).max(30).optional(),
+    industry: z.string().max(120).optional(),
+    experienceLevel: ExperienceLevelSchema.optional(),
     mediaAssetIds: z.array(z.string().uuid()).max(16).optional(),
   })
   .strict();
@@ -130,6 +145,9 @@ export const UpdateJobRequestSchema = z
     compensation: CompensationSchema.optional(),
     status: JobStatusSchema.optional(),
     tags: z.array(z.string().max(60)).max(20).optional(),
+    requiredSkills: z.array(z.string().max(100)).max(30).optional(),
+    industry: z.string().max(120).optional(),
+    experienceLevel: ExperienceLevelSchema.optional(),
     mediaAssetIds: z.array(z.string().uuid()).max(16).optional(),
   })
   .strict();

@@ -7,6 +7,11 @@ import { createInMemoryJobsStore } from "../src/adapters/in-memory/jobs.store.js
 import { createInMemoryApplicationsStore } from "../src/adapters/in-memory/applications.store.js";
 import { createInMemorySavedJobsStore } from "../src/adapters/in-memory/saved-jobs.store.js";
 import { createNoopNotificationsAdapter } from "../src/adapters/noop-notifications.adapter.js";
+import { createInMemoryCandidateSkillsStore } from "../src/adapters/in-memory/candidate-skills.store.js";
+import { createInMemoryCandidateExperienceStore } from "../src/adapters/in-memory/candidate-experience.store.js";
+import { createInMemoryCandidateEducationStore } from "../src/adapters/in-memory/candidate-education.store.js";
+import { createInMemoryCandidatePreferencesStore } from "../src/adapters/in-memory/candidate-preferences.store.js";
+import { createInMemoryNotificationPreferencesStore } from "../src/adapters/in-memory/notification-preferences.store.js";
 
 const TEST_ENV: JobsEnv = {
   NODE_ENV: "test",
@@ -61,6 +66,11 @@ export async function buildTestApp() {
     applications: createInMemoryApplicationsStore(),
     savedJobs: createInMemorySavedJobsStore(() => jobs._rows),
     notifications: createNoopNotificationsAdapter(),
+    candidateSkills: createInMemoryCandidateSkillsStore(),
+    candidateExperience: createInMemoryCandidateExperienceStore(),
+    candidateEducation: createInMemoryCandidateEducationStore(),
+    candidatePreferences: createInMemoryCandidatePreferencesStore(),
+    notificationPreferences: createInMemoryNotificationPreferencesStore(),
   };
   return buildJobsApp(deps);
 }
