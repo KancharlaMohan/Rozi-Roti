@@ -526,6 +526,112 @@ CREATE TABLE IF NOT EXISTS jobs_subscriptions (
 );
 CREATE INDEX IF NOT EXISTS jobs_subscriptions_subject_idx
   ON jobs_subscriptions (subject_id, status);
+
+-- Wave 9: AI Agent infrastructure
+CREATE TABLE IF NOT EXISTS jobs_agents (
+  id uuid PRIMARY KEY,
+  agent_type text NOT NULL,
+  name text NOT NULL,
+  status text NOT NULL DEFAULT 'idle' CHECK (status IN ('idle','running','error','disabled')),
+  schedule_cron text,
+  last_run_at timestamptz,
+  last_result jsonb,
+  config jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS jobs_agent_runs (
+  id uuid PRIMARY KEY,
+  agent_id uuid NOT NULL REFERENCES jobs_agents(id),
+  status text NOT NULL DEFAULT 'running' CHECK (status IN ('running','completed','failed','cancelled')),
+  started_at timestamptz NOT NULL DEFAULT now(),
+  completed_at timestamptz,
+  result jsonb,
+  error text,
+  metrics jsonb NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS jobs_agent_runs_agent_idx
+  ON jobs_agent_runs (agent_id, started_at DESC);
+
+CREATE TABLE IF NOT EXISTS jobs_agent_actions (
+  id uuid PRIMARY KEY,
+  run_id uuid NOT NULL REFERENCES jobs_agent_runs(id),
+  action_type text NOT NULL,
+  entity_type text NOT NULL,
+  entity_id uuid,
+  description text,
+  metadata jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 9: Job-candidate match scores (Job Matcher Agent)
+CREATE TABLE IF NOT EXISTS jobs_match_scores (
+  id uuid PRIMARY KEY,
+  candidate_profile_id uuid NOT NULL,
+  job_id uuid NOT NULL,
+  score numeric NOT NULL,
+  factors jsonb NOT NULL DEFAULT '{}',
+  computed_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_match_scores_uniq
+  ON jobs_match_scores (candidate_profile_id, job_id);
+CREATE INDEX IF NOT EXISTS jobs_match_scores_candidate_idx
+  ON jobs_match_scores (candidate_profile_id, score DESC);
+
+-- Wave 9: AI-generated suggestions (Resume Coach, Job Optimizer)
+CREATE TABLE IF NOT EXISTS jobs_agent_suggestions (
+  id uuid PRIMARY KEY,
+  subject_id uuid NOT NULL,
+  agent_type text NOT NULL,
+  suggestion_type text NOT NULL,
+  content jsonb NOT NULL DEFAULT '{}',
+  status text NOT NULL DEFAULT 'pending',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_agent_suggestions_subject_idx
+  ON jobs_agent_suggestions (subject_id, created_at DESC);
+
+-- Wave 9: Application rankings (Candidate Ranker Agent)
+CREATE TABLE IF NOT EXISTS jobs_application_rankings (
+  application_id uuid PRIMARY KEY,
+  score numeric NOT NULL,
+  factors jsonb NOT NULL DEFAULT '{}',
+  computed_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 9: Health checks (Health Monitor Agent)
+CREATE TABLE IF NOT EXISTS jobs_health_checks (
+  id uuid PRIMARY KEY,
+  check_type text NOT NULL,
+  status text NOT NULL,
+  response_time_ms integer,
+  metadata jsonb NOT NULL DEFAULT '{}',
+  checked_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 9: Performance metrics (Performance Monitor Agent)
+CREATE TABLE IF NOT EXISTS jobs_performance_metrics (
+  id uuid PRIMARY KEY,
+  metric_type text NOT NULL,
+  endpoint text,
+  value numeric NOT NULL,
+  metadata jsonb NOT NULL DEFAULT '{}',
+  measured_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 9: Incidents (Incident Responder Agent)
+CREATE TABLE IF NOT EXISTS jobs_incidents (
+  id uuid PRIMARY KEY,
+  severity text NOT NULL CHECK (severity IN ('low','medium','high','critical')),
+  title text NOT NULL,
+  description text,
+  status text NOT NULL DEFAULT 'open' CHECK (status IN ('open','investigating','resolved','closed')),
+  resolved_at timestamptz,
+  metadata jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {

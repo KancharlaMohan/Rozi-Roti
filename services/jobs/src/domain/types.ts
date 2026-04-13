@@ -355,3 +355,38 @@ export type SubscriptionRow = {
   expiresAt: string | null;
   createdAt: string;
 };
+
+export type AgentRow = {
+  id: string;
+  agentType: string;
+  name: string;
+  status: string;
+  scheduleCron: string | null;
+  lastRunAt: string | null;
+  lastResult: Record<string, unknown> | null;
+  config: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AgentRunRow = {
+  id: string;
+  agentId: string;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  result: Record<string, unknown> | null;
+  error: string | null;
+  metrics: Record<string, unknown>;
+};
+
+export type AgentActionRow = {
+  id: string;
+  runId: string;
+  actionType: string;
+  entityType: string;
+  entityId: string | null;
+  description: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};

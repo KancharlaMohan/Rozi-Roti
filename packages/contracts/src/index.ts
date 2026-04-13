@@ -25,3 +25,4 @@ export * from "./reviews.js";
 export * from "./ads.js";
 export * from "./seo.js";
 export * from "./subscriptions.js";
+export * from "./agents.js";

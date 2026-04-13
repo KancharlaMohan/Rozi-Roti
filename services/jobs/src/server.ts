@@ -26,6 +26,8 @@ import { createInMemoryReviewsStore } from "./adapters/in-memory/reviews.store.j
 import { createInMemoryAdsStore } from "./adapters/in-memory/ads.store.js";
 import { createInMemorySeoStore } from "./adapters/in-memory/seo.store.js";
 import { createInMemorySubscriptionsStore } from "./adapters/in-memory/subscriptions.store.js";
+import { createInMemoryAgentsStore } from "./adapters/in-memory/agents.store.js";
+import { AGENT_SEEDS } from "./domain/agent-seeds.js";
 
 const env = loadJobsEnv();
 
@@ -98,6 +100,7 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       ads: createInMemoryAdsStore(),
       seo: createInMemorySeoStore(),
       subscriptions: createInMemorySubscriptionsStore(),
+      agents: createInMemoryAgentsStore(),
     };
   }
 
@@ -137,10 +140,16 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
     ads: createInMemoryAdsStore(),
     seo: createInMemorySeoStore(),
     subscriptions: createInMemorySubscriptionsStore(),
+    agents: createInMemoryAgentsStore(),
   };
 }
 
 const adapters = await buildAdapters();
+
+// Seed AI agents on startup — idempotent, only inserts if not already present
+await adapters.agents.seedAgents(AGENT_SEEDS);
+console.log(`[jobs] Seeded ${AGENT_SEEDS.length} AI agents.`);
+
 const authenticate = createStubDevBearerAuthenticateAdapter();
 
 const app = await buildJobsApp({
