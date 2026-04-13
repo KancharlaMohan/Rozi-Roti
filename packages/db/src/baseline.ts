@@ -482,6 +482,28 @@ CREATE INDEX IF NOT EXISTS jobs_featured_employers_active_idx
 
 -- Wave 6: Sponsored jobs flag
 ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS is_sponsored boolean NOT NULL DEFAULT false;
+
+-- Wave 7: SEO metadata
+CREATE TABLE IF NOT EXISTS jobs_seo_metadata (
+  id uuid PRIMARY KEY,
+  entity_type text NOT NULL,
+  entity_id uuid NOT NULL,
+  slug text NOT NULL,
+  meta_title text NOT NULL,
+  meta_description text,
+  og_image_asset_id uuid,
+  structured_data jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_seo_metadata_slug_idx
+  ON jobs_seo_metadata (slug);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_seo_metadata_entity_idx
+  ON jobs_seo_metadata (entity_type, entity_id);
+
+-- Wave 7: Slugs on postings and employers
+ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS slug text;
+ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS slug text;
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {

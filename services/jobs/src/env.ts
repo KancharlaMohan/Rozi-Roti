@@ -9,6 +9,8 @@ export const JobsEnvSchema = ServiceEnvSchema.extend({
   NOTIFICATIONS_URL: z.string().url().optional(),
   /** Service token for trusted notification sends (optional). */
   NOTIFICATIONS_SEND_TOKEN: z.string().min(1).optional(),
+  /** Public base URL for SEO (sitemap, canonical URLs). */
+  BASE_URL: z.string().url().optional(),
 });
 
 export type JobsEnv = z.infer<typeof JobsEnvSchema>;

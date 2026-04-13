@@ -324,3 +324,16 @@ export type AdCreativeRow = {
   clickCount: number;
   createdAt: string;
 };
+
+export type SeoMetadataRow = {
+  id: string;
+  entityType: string;
+  entityId: string;
+  slug: string;
+  metaTitle: string;
+  metaDescription: string | null;
+  ogImageAssetId: string | null;
+  structuredData: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+};

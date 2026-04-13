@@ -24,6 +24,7 @@ import { createInMemoryAnalyticsStore } from "../src/adapters/in-memory/analytic
 import { createInMemoryAdminStore } from "../src/adapters/in-memory/admin.store.js";
 import { createInMemoryReviewsStore } from "../src/adapters/in-memory/reviews.store.js";
 import { createInMemoryAdsStore } from "../src/adapters/in-memory/ads.store.js";
+import { createInMemorySeoStore } from "../src/adapters/in-memory/seo.store.js";
 
 const TEST_ENV: JobsEnv = {
   NODE_ENV: "test",
@@ -108,6 +109,7 @@ export async function buildTestApp() {
     admin: createInMemoryAdminStore(createInMemoryEmployersStore(), jobs),
     reviews: createInMemoryReviewsStore(),
     ads: createInMemoryAdsStore(),
+    seo: createInMemorySeoStore(),
   };
   return buildJobsApp(deps);
 }
