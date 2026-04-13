@@ -23,7 +23,11 @@ import {
   UpsertCandidateProfileRequestSchema,
   CandidateProfilePublicSchema,
 } from "@jobs/contracts";
-import { createRequirePrincipalPreHandler } from "@cosmox/http-auth";
+import {
+  assertSubjectMatchesPrincipal,
+  createRequirePrincipalPreHandler,
+  UnauthorizedSubjectMismatchError,
+} from "@cosmox/http-auth";
 import type { AuthenticateRequestPort } from "@cosmox/providers";
 import { randomUUID } from "crypto";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -153,9 +157,7 @@ export async function buildJobsApp(
         const parsed = RegisterEmployerRequestSchema.parse(req.body);
         const principal = req.principal!;
 
-        if (parsed.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
+        assertSubjectMatchesPrincipal(principal.subjectId, parsed.coreSubjectId, principal.coreSubjectId);
 
         const employer = await svc.registerEmployer({
           subjectId: principal.subjectId,
@@ -174,6 +176,9 @@ export async function buildJobsApp(
       } catch (e) {
         if (e instanceof ZodError) {
           return errorReply(reply, 400, "validation_error", "Invalid request body.", req.id);
+        }
+        if (e instanceof UnauthorizedSubjectMismatchError) {
+          return errorReply(reply, 403, e.code, e.message, req.id);
         }
         if (typeof e === "object" && e !== null && (e as { code?: string }).code === "employer_already_exists") {
           return errorReply(reply, 409, "employer_already_exists", (e as Error).message, req.id);
@@ -209,9 +214,7 @@ export async function buildJobsApp(
         const parsed = CreateJobRequestSchema.parse(req.body);
         const principal = req.principal!;
 
-        if (parsed.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
+        assertSubjectMatchesPrincipal(principal.subjectId, parsed.coreSubjectId, principal.coreSubjectId);
 
         const employer = await svc.getEmployerBySubject(principal.subjectId);
         if (!employer) {
@@ -235,6 +238,9 @@ export async function buildJobsApp(
         if (e instanceof ZodError) {
           return errorReply(reply, 400, "validation_error", "Invalid request body.", req.id);
         }
+        if (e instanceof UnauthorizedSubjectMismatchError) {
+          return errorReply(reply, 403, e.code, e.message, req.id);
+        }
         throw e;
       }
     },
@@ -249,9 +255,7 @@ export async function buildJobsApp(
         const parsed = UpdateJobRequestSchema.parse(req.body);
         const principal = req.principal!;
 
-        if (parsed.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
+        assertSubjectMatchesPrincipal(principal.subjectId, parsed.coreSubjectId, principal.coreSubjectId);
 
         const employer = await svc.getEmployerBySubject(principal.subjectId);
         if (!employer) {
@@ -263,6 +267,9 @@ export async function buildJobsApp(
       } catch (e) {
         if (e instanceof ZodError) {
           return errorReply(reply, 400, "validation_error", "Invalid request body.", req.id);
+        }
+        if (e instanceof UnauthorizedSubjectMismatchError) {
+          return errorReply(reply, 403, e.code, e.message, req.id);
         }
         const code = (e as { code?: string }).code;
         if (code === "not_found") return errorReply(reply, 404, "not_found", (e as Error).message, req.id);
@@ -278,14 +285,11 @@ export async function buildJobsApp(
     async (req, reply) => {
       try {
         const principal = req.principal!;
+        // Self-only: coreSubjectId injected from principal, not from query string.
         const query = ListEmployerJobsQuerySchema.parse({
           ...(req.query as Record<string, unknown>),
           coreSubjectId: principal.coreSubjectId,
         });
-
-        if (query.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
 
         const employer = await svc.getEmployerBySubject(principal.subjectId);
         if (!employer) {
@@ -342,12 +346,16 @@ export async function buildJobsApp(
           offset: query.offset,
         });
 
+        // IDENTITY NOTE: r.subjectId is persisted identity, not canonical.
+        // In production, resolve via IdentityResolutionPort to map subjectId → coreSubjectId.
+        // For now, the employer view shows subjectId in the coreSubjectId field.
+        // This is a known transitional gap per IDENTITY_RESOLUTION_BOUNDARY.md.
         return reply.send(
           ListJobApplicationsResponseSchema.parse({
             applications: rows.map((r) =>
               ApplicationPublicSchema.parse({
                 ...r,
-                coreSubjectId: r.subjectId,
+                coreSubjectId: r.subjectId, // TODO: resolve via identity service
               }),
             ),
             total,
@@ -371,9 +379,7 @@ export async function buildJobsApp(
         const parsed = UpdateApplicationStatusRequestSchema.parse(req.body);
         const principal = req.principal!;
 
-        if (parsed.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
+        assertSubjectMatchesPrincipal(principal.subjectId, parsed.coreSubjectId, principal.coreSubjectId);
 
         const updated = await svc.updateApplicationStatus({
           applicationId: appId,
@@ -381,15 +387,20 @@ export async function buildJobsApp(
           status: parsed.status,
         });
 
+        // IDENTITY NOTE: updated.subjectId is persisted, not canonical.
+        // Same transitional gap as employer application listing.
         return reply.send(
           ApplicationPublicSchema.parse({
             ...updated,
-            coreSubjectId: updated.subjectId,
+            coreSubjectId: updated.subjectId, // TODO: resolve via identity service
           }),
         );
       } catch (e) {
         if (e instanceof ZodError) {
           return errorReply(reply, 400, "validation_error", "Invalid request body.", req.id);
+        }
+        if (e instanceof UnauthorizedSubjectMismatchError) {
+          return errorReply(reply, 403, e.code, e.message, req.id);
         }
         const code = (e as { code?: string }).code;
         if (code === "not_found") return errorReply(reply, 404, "not_found", (e as Error).message, req.id);
@@ -411,9 +422,7 @@ export async function buildJobsApp(
         const parsed = UpsertCandidateProfileRequestSchema.parse(req.body);
         const principal = req.principal!;
 
-        if (parsed.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
+        assertSubjectMatchesPrincipal(principal.subjectId, parsed.coreSubjectId, principal.coreSubjectId);
 
         const profile = await svc.upsertCandidateProfile({
           subjectId: principal.subjectId,
@@ -432,6 +441,9 @@ export async function buildJobsApp(
       } catch (e) {
         if (e instanceof ZodError) {
           return errorReply(reply, 400, "validation_error", "Invalid request body.", req.id);
+        }
+        if (e instanceof UnauthorizedSubjectMismatchError) {
+          return errorReply(reply, 403, e.code, e.message, req.id);
         }
         throw e;
       }
@@ -465,12 +477,11 @@ export async function buildJobsApp(
         const parsed = ApplyForJobRequestSchema.parse(req.body);
         const principal = req.principal!;
 
-        if (parsed.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
+        assertSubjectMatchesPrincipal(principal.subjectId, parsed.coreSubjectId, principal.coreSubjectId);
 
         const application = await svc.applyForJob({
           subjectId: principal.subjectId,
+          coreSubjectId: principal.coreSubjectId,
           jobId: id,
           coverLetter: parsed.coverLetter,
           resumeAssetId: parsed.resumeAssetId,
@@ -485,6 +496,9 @@ export async function buildJobsApp(
       } catch (e) {
         if (e instanceof ZodError) {
           return errorReply(reply, 400, "validation_error", "Invalid request body.", req.id);
+        }
+        if (e instanceof UnauthorizedSubjectMismatchError) {
+          return errorReply(reply, 403, e.code, e.message, req.id);
         }
         const code = (e as { code?: string }).code;
         if (code === "not_found") return errorReply(reply, 404, "not_found", (e as Error).message, req.id);
@@ -556,15 +570,16 @@ export async function buildJobsApp(
         const parsed = SaveJobRequestSchema.parse(req.body);
         const principal = req.principal!;
 
-        if (parsed.coreSubjectId !== principal.coreSubjectId) {
-          return errorReply(reply, 403, "unauthorized_subject_mismatch", "Subject mismatch.", req.id);
-        }
+        assertSubjectMatchesPrincipal(principal.subjectId, parsed.coreSubjectId, principal.coreSubjectId);
 
         await svc.saveJob(principal.subjectId, id);
         return reply.send({ ok: true });
       } catch (e) {
         if (e instanceof ZodError) {
           return errorReply(reply, 400, "validation_error", "Invalid request body.", req.id);
+        }
+        if (e instanceof UnauthorizedSubjectMismatchError) {
+          return errorReply(reply, 403, e.code, e.message, req.id);
         }
         const code = (e as { code?: string }).code;
         if (code === "not_found") return errorReply(reply, 404, "not_found", (e as Error).message, req.id);

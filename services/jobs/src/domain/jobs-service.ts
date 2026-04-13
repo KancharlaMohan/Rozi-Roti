@@ -154,6 +154,8 @@ export class JobsService {
 
   async applyForJob(input: {
     subjectId: string;
+    /** Canonical identity — required for cross-service calls (notifications). Never assume equal to subjectId. */
+    coreSubjectId: string;
     jobId: string;
     coverLetter?: string;
     resumeAssetId?: string;
@@ -184,11 +186,12 @@ export class JobsService {
       resumeAssetId: input.resumeAssetId ?? null,
     });
 
-    // Fire-and-forget notification — do not fail the application if notification fails
+    // Fire-and-forget notification — do not fail the application if notification fails.
+    // Uses coreSubjectId (canonical) for cross-service notification delivery.
     const employer = await this.deps.employers.findById(job.employerId);
     this.deps.notifications
       .sendApplicationConfirmation({
-        candidateCoreSubjectId: input.subjectId,
+        candidateCoreSubjectId: input.coreSubjectId,
         jobTitle: job.title,
         employerName: employer?.companyName ?? "Unknown",
       })
@@ -197,6 +200,15 @@ export class JobsService {
     return application;
   }
 
+  /**
+   * Update application status (employer action).
+   *
+   * Identity note: We cannot resolve the candidate's coreSubjectId from their
+   * persisted subjectId within this Planet — that would require calling the
+   * identity resolution boundary, which is owned by the identity service.
+   * For now, the notification is sent with subjectId as a known limitation.
+   * In production, this should call IdentityResolutionPort to resolve canonical identity.
+   */
   async updateApplicationStatus(input: {
     applicationId: string;
     employerSubjectId: string;
@@ -216,10 +228,13 @@ export class JobsService {
     const updated = await this.deps.applications.updateStatus(input.applicationId, input.status);
     if (!updated) throw Object.assign(new Error("Application not found."), { code: "not_found" });
 
-    // Fire-and-forget notification
+    // Fire-and-forget notification.
+    // LIMITATION: app.subjectId is persisted identity, not canonical.
+    // In production, resolve via IdentityResolutionPort before sending.
+    // This is a known gap — the Jobs Planet does not own identity resolution.
     this.deps.notifications
       .sendApplicationStatusUpdate({
-        candidateCoreSubjectId: app.subjectId,
+        candidateCoreSubjectId: app.subjectId, // TODO: resolve to coreSubjectId via identity service
         jobTitle: job.title,
         newStatus: input.status,
       })
