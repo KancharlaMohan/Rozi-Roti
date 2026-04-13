@@ -504,6 +504,28 @@ CREATE UNIQUE INDEX IF NOT EXISTS jobs_seo_metadata_entity_idx
 -- Wave 7: Slugs on postings and employers
 ALTER TABLE jobs_postings ADD COLUMN IF NOT EXISTS slug text;
 ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS slug text;
+
+-- Wave 8: Subscription tiers
+CREATE TABLE IF NOT EXISTS jobs_subscription_tiers (
+  id uuid PRIMARY KEY,
+  name text NOT NULL,
+  tier_type text NOT NULL CHECK (tier_type IN ('candidate','employer')),
+  features jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 8: Subscriptions
+CREATE TABLE IF NOT EXISTS jobs_subscriptions (
+  id uuid PRIMARY KEY,
+  subject_id uuid NOT NULL,
+  tier_id uuid NOT NULL REFERENCES jobs_subscription_tiers(id),
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','cancelled','expired')),
+  starts_at timestamptz NOT NULL,
+  expires_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_subscriptions_subject_idx
+  ON jobs_subscriptions (subject_id, status);
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {

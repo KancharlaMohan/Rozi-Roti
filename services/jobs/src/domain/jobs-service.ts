@@ -24,6 +24,7 @@ import type { AdminRepository } from "../ports/admin.repository.js";
 import type { ReviewsRepository } from "../ports/reviews.repository.js";
 import type { AdsRepository } from "../ports/ads.repository.js";
 import type { SeoRepository } from "../ports/seo.repository.js";
+import type { SubscriptionsRepository } from "../ports/subscriptions.repository.js";
 
 export type JobsServiceDeps = {
   employers: EmployersRepository;
@@ -50,6 +51,7 @@ export type JobsServiceDeps = {
   reviews: ReviewsRepository;
   ads: AdsRepository;
   seo: SeoRepository;
+  subscriptions: SubscriptionsRepository;
 };
 
 export class JobsService {

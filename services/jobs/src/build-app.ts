@@ -23,6 +23,7 @@ import { registerAdminRoutes } from "./routes/admin.js";
 import { registerReviewRoutes } from "./routes/reviews.js";
 import { registerAdRoutes } from "./routes/ads.js";
 import { registerSeoRoutes } from "./routes/seo.js";
+import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
 
 export type BuildJobsAppInput = {
   env: JobsEnv;
@@ -61,6 +62,7 @@ export async function buildJobsApp(
   registerReviewRoutes(app, input, requirePrincipal);
   registerAdRoutes(app, svc, input, requirePrincipal);
   registerSeoRoutes(app, input);
+  registerSubscriptionRoutes(app, input, requirePrincipal);
 
   return app;
 }

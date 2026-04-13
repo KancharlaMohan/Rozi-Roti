@@ -337,3 +337,21 @@ export type SeoMetadataRow = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type SubscriptionTierRow = {
+  id: string;
+  name: string;
+  tierType: string;
+  features: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type SubscriptionRow = {
+  id: string;
+  subjectId: string;
+  tierId: string;
+  status: string;
+  startsAt: string;
+  expiresAt: string | null;
+  createdAt: string;
+};

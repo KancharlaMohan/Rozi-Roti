@@ -25,6 +25,7 @@ import { createInMemoryAdminStore } from "./adapters/in-memory/admin.store.js";
 import { createInMemoryReviewsStore } from "./adapters/in-memory/reviews.store.js";
 import { createInMemoryAdsStore } from "./adapters/in-memory/ads.store.js";
 import { createInMemorySeoStore } from "./adapters/in-memory/seo.store.js";
+import { createInMemorySubscriptionsStore } from "./adapters/in-memory/subscriptions.store.js";
 
 const env = loadJobsEnv();
 
@@ -96,6 +97,7 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       reviews: createInMemoryReviewsStore(),
       ads: createInMemoryAdsStore(),
       seo: createInMemorySeoStore(),
+      subscriptions: createInMemorySubscriptionsStore(),
     };
   }
 
@@ -134,6 +136,7 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
     reviews: createInMemoryReviewsStore(),
     ads: createInMemoryAdsStore(),
     seo: createInMemorySeoStore(),
+    subscriptions: createInMemorySubscriptionsStore(),
   };
 }
 
