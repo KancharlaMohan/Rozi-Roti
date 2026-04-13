@@ -15,3 +15,5 @@ export * from "./notification-preferences.js";
 export * from "./candidate-search.js";
 export * from "./screening.js";
 export * from "./templates.js";
+export * from "./privacy.js";
+export * from "./moderation.js";

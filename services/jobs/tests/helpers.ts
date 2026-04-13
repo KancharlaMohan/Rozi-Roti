@@ -16,6 +16,8 @@ import { createInMemoryJobTemplatesStore } from "../src/adapters/in-memory/job-t
 import { createInMemoryRecentlyViewedStore } from "../src/adapters/in-memory/recently-viewed.store.js";
 import { createInMemoryScreeningStore } from "../src/adapters/in-memory/screening.store.js";
 import { createInMemoryCandidateSearchStore } from "../src/adapters/in-memory/candidate-search.store.js";
+import { createInMemoryPrivacyStore } from "../src/adapters/in-memory/privacy.store.js";
+import { createInMemoryModerationStore } from "../src/adapters/in-memory/moderation.store.js";
 
 const TEST_ENV: JobsEnv = {
   NODE_ENV: "test",
@@ -26,6 +28,7 @@ const TEST_ENV: JobsEnv = {
 
 export const SUBJECT_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 export const SUBJECT_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+export const ADMIN_SUBJECT = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 
 /**
  * Creates a test-configured authenticate adapter where any `Authorization: Bearer test_<uuid>`
@@ -35,28 +38,36 @@ function createTestAuthAdapter(): AuthenticateRequestPort {
   return {
     async authenticate(input: AuthenticateRequestInput) {
       const authHeader = input.source.getHeader("authorization");
-      if (!authHeader || !authHeader.startsWith("Bearer test_")) {
+      if (!authHeader) {
+        return { ok: false as const, code: "missing_credentials" as const, message: "Missing token" };
+      }
+      // Admin token: Bearer admin_<uuid>
+      if (authHeader.startsWith("Bearer admin_")) {
+        const subjectId = authHeader.replace("Bearer admin_", "");
         return {
-          ok: false as const,
-          code: "missing_credentials" as const,
-          message: "Missing token",
+          ok: true as const,
+          principal: { subjectId, coreSubjectId: subjectId, scopes: ["self", "admin"] },
         };
       }
-      const subjectId = authHeader.replace("Bearer test_", "");
-      return {
-        ok: true as const,
-        principal: {
-          subjectId,
-          coreSubjectId: subjectId,
-          scopes: ["self"],
-        },
-      };
+      // Regular token: Bearer test_<uuid>
+      if (authHeader.startsWith("Bearer test_")) {
+        const subjectId = authHeader.replace("Bearer test_", "");
+        return {
+          ok: true as const,
+          principal: { subjectId, coreSubjectId: subjectId, scopes: ["self"] },
+        };
+      }
+      return { ok: false as const, code: "invalid_credentials" as const, message: "Invalid token" };
     },
   };
 }
 
 export function authHeader(subjectId: string) {
   return { authorization: `Bearer test_${subjectId}` };
+}
+
+export function adminAuthHeader(subjectId: string) {
+  return { authorization: `Bearer admin_${subjectId}` };
 }
 
 export async function buildTestApp() {
@@ -83,6 +94,8 @@ export async function buildTestApp() {
       () => [],
       () => null,
     ),
+    privacy: createInMemoryPrivacyStore(),
+    moderation: createInMemoryModerationStore(),
   };
   return buildJobsApp(deps);
 }

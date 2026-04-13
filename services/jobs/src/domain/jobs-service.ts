@@ -15,6 +15,8 @@ import type { JobTemplatesRepository } from "../ports/job-templates.repository.j
 import type { RecentlyViewedRepository } from "../ports/recently-viewed.repository.js";
 import type { ScreeningRepository } from "../ports/screening.repository.js";
 import type { CandidateSearchRepository } from "../ports/candidate-search.repository.js";
+import type { PrivacyRepository } from "../ports/privacy.repository.js";
+import type { ModerationRepository } from "../ports/moderation.repository.js";
 
 export type JobsServiceDeps = {
   employers: EmployersRepository;
@@ -32,6 +34,8 @@ export type JobsServiceDeps = {
   recentlyViewed: RecentlyViewedRepository;
   screening: ScreeningRepository;
   candidateSearch: CandidateSearchRepository;
+  privacy: PrivacyRepository;
+  moderation: ModerationRepository;
 };
 
 export class JobsService {

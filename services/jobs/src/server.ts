@@ -16,6 +16,8 @@ import { createInMemoryJobTemplatesStore } from "./adapters/in-memory/job-templa
 import { createInMemoryRecentlyViewedStore } from "./adapters/in-memory/recently-viewed.store.js";
 import { createInMemoryScreeningStore } from "./adapters/in-memory/screening.store.js";
 import { createInMemoryCandidateSearchStore } from "./adapters/in-memory/candidate-search.store.js";
+import { createInMemoryPrivacyStore } from "./adapters/in-memory/privacy.store.js";
+import { createInMemoryModerationStore } from "./adapters/in-memory/moderation.store.js";
 
 const env = loadJobsEnv();
 
@@ -78,6 +80,8 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       candidateSearch: createInMemoryCandidateSearchStore(
         () => [], () => [], () => null, // PG mode handles joins in SQL
       ),
+      privacy: createInMemoryPrivacyStore(),
+      moderation: createInMemoryModerationStore(),
     };
   }
 
@@ -107,6 +111,8 @@ async function buildAdapters(): Promise<Omit<BuildJobsAppInput, "env" | "authent
       (profileId: string) => [],
       (profileId: string) => null,
     ),
+    privacy: createInMemoryPrivacyStore(),
+    moderation: createInMemoryModerationStore(),
   };
 }
 

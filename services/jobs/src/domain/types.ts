@@ -163,3 +163,59 @@ export type ScreeningAnswerRow = {
   answerText: string;
   createdAt: string;
 };
+
+export type PrivacySettingsRow = {
+  subjectId: string;
+  profileVisibility: string;
+  resumeVisible: boolean;
+  showFullName: boolean;
+  updatedAt: string;
+};
+
+export type BlockedEmployerRow = {
+  id: string;
+  subjectId: string;
+  employerId: string;
+  createdAt: string;
+};
+
+export type ModerationQueueItemRow = {
+  id: string;
+  entityType: string;
+  entityId: string;
+  status: string;
+  reason: string | null;
+  submittedBySubjectId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ModerationActionRow = {
+  id: string;
+  queueItemId: string;
+  action: string;
+  moderatorSubjectId: string;
+  notes: string | null;
+  createdAt: string;
+};
+
+export type FlagRow = {
+  id: string;
+  entityType: string;
+  entityId: string;
+  flagReason: string;
+  reportedBySubjectId: string;
+  description: string | null;
+  createdAt: string;
+};
+
+export type EmployerVerificationRow = {
+  id: string;
+  employerId: string;
+  documentAssetId: string | null;
+  status: string;
+  reviewedBySubjectId: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};

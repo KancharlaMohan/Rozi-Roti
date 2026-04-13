@@ -14,6 +14,8 @@ import { registerNotificationPreferenceRoutes } from "./routes/notification-pref
 import { registerTemplateRoutes } from "./routes/templates.js";
 import { registerRecentlyViewedRoutes } from "./routes/recently-viewed.js";
 import { registerCandidateSearchRoutes } from "./routes/candidate-search.js";
+import { registerPrivacyRoutes } from "./routes/privacy.js";
+import { registerModerationRoutes } from "./routes/moderation.js";
 
 export type BuildJobsAppInput = {
   env: JobsEnv;
@@ -43,6 +45,8 @@ export async function buildJobsApp(
   registerTemplateRoutes(app, svc, input, requirePrincipal);
   registerRecentlyViewedRoutes(app, input, requirePrincipal);
   registerCandidateSearchRoutes(app, svc, input, requirePrincipal);
+  registerPrivacyRoutes(app, input, requirePrincipal);
+  registerModerationRoutes(app, svc, input, requirePrincipal);
 
   return app;
 }

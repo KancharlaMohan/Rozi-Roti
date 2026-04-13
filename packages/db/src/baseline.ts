@@ -253,6 +253,82 @@ CREATE TABLE IF NOT EXISTS jobs_screening_answers (
 );
 CREATE INDEX IF NOT EXISTS jobs_screening_answers_app_idx
   ON jobs_screening_answers (application_id);
+
+-- Wave 3: Privacy settings
+CREATE TABLE IF NOT EXISTS jobs_privacy_settings (
+  subject_id uuid PRIMARY KEY,
+  profile_visibility text NOT NULL DEFAULT 'employers_only'
+    CHECK (profile_visibility IN ('public','employers_only','hidden')),
+  resume_visible boolean NOT NULL DEFAULT true,
+  show_full_name boolean NOT NULL DEFAULT true,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 3: Blocked employers
+CREATE TABLE IF NOT EXISTS jobs_blocked_employers (
+  id uuid PRIMARY KEY,
+  subject_id uuid NOT NULL,
+  employer_id uuid NOT NULL REFERENCES jobs_employers(id),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_blocked_employers_uniq
+  ON jobs_blocked_employers (subject_id, employer_id);
+CREATE INDEX IF NOT EXISTS jobs_blocked_employers_subject_idx
+  ON jobs_blocked_employers (subject_id);
+
+-- Wave 3: Moderation queue
+CREATE TABLE IF NOT EXISTS jobs_moderation_queue (
+  id uuid PRIMARY KEY,
+  entity_type text NOT NULL CHECK (entity_type IN ('job_posting','employer','candidate')),
+  entity_id uuid NOT NULL,
+  status text NOT NULL DEFAULT 'pending_review'
+    CHECK (status IN ('pending_review','approved','rejected','flagged')),
+  reason text,
+  submitted_by_subject_id uuid,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_moderation_queue_status_idx
+  ON jobs_moderation_queue (status, created_at);
+
+-- Wave 3: Moderation actions
+CREATE TABLE IF NOT EXISTS jobs_moderation_actions (
+  id uuid PRIMARY KEY,
+  queue_item_id uuid NOT NULL REFERENCES jobs_moderation_queue(id),
+  action text NOT NULL,
+  moderator_subject_id uuid NOT NULL,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Wave 3: Flags
+CREATE TABLE IF NOT EXISTS jobs_flags (
+  id uuid PRIMARY KEY,
+  entity_type text NOT NULL,
+  entity_id uuid NOT NULL,
+  flag_reason text NOT NULL,
+  reported_by_subject_id uuid NOT NULL,
+  description text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS jobs_flags_entity_idx
+  ON jobs_flags (entity_type, entity_id);
+
+-- Wave 3: Employer verification
+CREATE TABLE IF NOT EXISTS jobs_employer_verifications (
+  id uuid PRIMARY KEY,
+  employer_id uuid NOT NULL REFERENCES jobs_employers(id),
+  document_asset_id uuid,
+  status text NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('unverified','pending','verified','rejected')),
+  reviewed_by_subject_id uuid,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS verification_status text NOT NULL DEFAULT 'unverified';
+ALTER TABLE jobs_employers ADD COLUMN IF NOT EXISTS verified_at timestamptz;
 `;
 
 export async function applyBaselineSchema(pool: Pool): Promise<void> {
