@@ -1,0 +1,60 @@
+# Rozi-Roti Jobs Planet — AI Coding Rules
+
+## MUST READ BEFORE ANY TASK
+
+- CONTEXT.md
+- ARCHITECTURE_RULES.md
+- IDENTITY_RULES.md
+- AI_CONSTITUTION.md
+
+## IDENTITY RULES (NON-NEGOTIABLE)
+
+- coreSubjectId = canonical external identity (API bodies, cross-service)
+- subjectId = internal persisted identity (DB columns, storage)
+- NEVER assume subjectId === coreSubjectId
+- ALWAYS use assertSubjectMatchesPrincipal for mutations
+- NEVER implement local identity resolution
+- NEVER query identity_subjects from this Planet
+
+## ARCHITECTURE RULES (NON-NEGOTIABLE)
+
+- No cross-service DB access — only jobs_* tables
+- No imports from services/* in cosmox-shared-services
+- Allowed imports: @cosmox/contracts, @cosmox/config, @cosmox/http-auth, @cosmox/providers, @cosmox/internal-client, @cosmox/db
+- Contracts-first — all API shapes in packages/contracts/src/ as Zod schemas
+- Ports/adapters — every external dependency behind a port interface
+- Region-agnostic — no hardcoded countries/currencies/jurisdictions
+- No event bus — HTTP orchestration only
+- No payment engine — extension points only
+
+## CODE GENERATION RULES
+
+- New contracts → packages/contracts/src/
+- New tables → packages/db/src/baseline.ts (prefixed jobs_*)
+- New domain types → services/jobs/src/domain/types.ts
+- New ports → services/jobs/src/ports/
+- New adapters → services/jobs/src/adapters/in-memory/ AND services/jobs/src/adapters/pg/
+- New routes → services/jobs/src/routes/
+- New tests → services/jobs/tests/
+- All responses use schema .parse() before sending
+- All mutations catch UnauthorizedSubjectMismatchError
+- Fire-and-forget side effects use .catch() — never fail main operations
+- Generated code MUST pass: pnpm typecheck && pnpm test
+
+## FORBIDDEN PATTERNS
+
+- Direct SQL joins across service boundaries
+- Storing coreSubjectId in domain tables
+- Trusting request body coreSubjectId without assertSubjectMatchesPrincipal
+- Importing another service's implementation code
+- Hardcoding "India", "USA", "INR", "USD" or any specific country/currency
+- Using subjectId in notification payloads (must use coreSubjectId)
+- Placeholder/fake logic without // STUB marker
+- Skipping test coverage for new endpoints
+
+## FAILURE MODE
+
+- If any required context is missing → FAIL CLOSED
+- Do not guess architecture intent
+- Do not bypass rules for convenience
+- Ask for clarification rather than assuming
